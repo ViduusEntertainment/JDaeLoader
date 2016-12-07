@@ -15,7 +15,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.viduus.util.debug.OutputHandler;
-import com.viduus.util.models.Model;
+import com.viduus.util.models.ModelData;
 
 /**
  * This class is responsible for loading all of the Collada DAE files and for managing the memory
@@ -28,7 +28,7 @@ public class DaeLoader {
 	// Versions of Collada that this loader supports
 	private static final String IMPLEMENTED_VERSIONS = "1.4.1";
 	// HashMap of file paths to booleans where the boolean represents if the Model is actively in RAM
-	private static final HashMap<String, Model> model_files = new HashMap<>();
+	private static final HashMap<String, ModelData> model_files = new HashMap<>();
 	private DocumentBuilder db;
 	
 	/**
@@ -74,7 +74,7 @@ public class DaeLoader {
 	 * @return Returns the model, returns <b>null</b> if the model is not currently loaded
 	 * in memory.
 	 */
-	public Model getModel( String file_path ){
+	public ModelData getModel( String file_path ){
 		if( model_files.containsKey(file_path) && model_files.get(file_path) != null ){
 			return model_files.get(file_path);
 		}
@@ -90,7 +90,7 @@ public class DaeLoader {
 	 * or the Collada file was corrupted
 	 * @see #addModel(File)
 	 */
-	public Model loadModel( String file_path ) throws SAXException, IOException{
+	public ModelData loadModel( String file_path ) throws SAXException, IOException{
 		OutputHandler out = new OutputHandler();
 		out.startTimedPrintln("Loading model "+file_path+" into memory...");
 		
@@ -111,7 +111,7 @@ public class DaeLoader {
 					if( IMPLEMENTED_VERSIONS.contains(collada_version) ){
 						DaeParser parser = new DaeParser(file_path, collada_version);
 						parser.parse( curr_node );
-						Model new_model = parser.getModel();
+						ModelData new_model = parser.getModelData();
 						model_files.put(file_path, new_model);
 						
 						// FIXME - temporary and only used for testing

@@ -11,7 +11,7 @@ import com.viduus.util.models.geometries.Mesh;
  * @author Ethan Toney
  * @see com.viduus.util.models.loader.DaeLoader
  */
-public class Model{
+public class ModelData{
 
 	private final String name, dae_version;
 	private final HashMap<String, Mesh> mesh;
@@ -22,7 +22,7 @@ public class Model{
 	 * @param version - Collada version
 	 * @param object_meshes - The mesh of vertices, normals, and texture points
 	 */
-	public Model(String model_name, String version, HashMap<String, Mesh> object_meshes) {
+	public ModelData(String model_name, String version, HashMap<String, Mesh> object_meshes) {
 		name = model_name;
 		dae_version = version;
 		mesh = object_meshes;

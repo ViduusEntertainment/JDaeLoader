@@ -7,7 +7,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.viduus.util.debug.OutputHandler;
-import com.viduus.util.models.Model;
+import com.viduus.util.models.ModelData;
 import com.viduus.util.models.SceneNode;
 import com.viduus.util.models.animations.Animation;
 import com.viduus.util.models.controller.Controller;
@@ -325,8 +325,8 @@ public class DaeParser {
 	/**
 	 * @return The processed model from this parser.
 	 */
-	public Model getModel() {
-		Model new_model = new Model( model_name, version, scene_meshes );
+	public ModelData getModelData() {
+		ModelData new_model = new ModelData( model_name, version, scene_meshes );
 		return new_model;
 	}
 
