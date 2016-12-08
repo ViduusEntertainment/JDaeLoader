@@ -14,10 +14,10 @@ import com.viduus.util.models.geometries.Mesh;
 public class ModelData{
 
 	private final String name, dae_version;
-	private final HashMap<String, Mesh> mesh;
+	public final HashMap<String, Mesh> mesh;
 	
 	/**
-	 * Creates a new Model.
+	 * Creates a new ModelData instance.
 	 * @param model_name - The identifier for this model
 	 * @param version - Collada version
 	 * @param object_meshes - The mesh of vertices, normals, and texture points
@@ -26,6 +26,22 @@ public class ModelData{
 		name = model_name;
 		dae_version = version;
 		mesh = object_meshes;
+	}
+	
+	/**
+	 * Returns the name associated with the Model data
+	 * @return (String) - the name
+	 */
+	public String getName() {
+		return this.name;
+	}
+	
+	/**
+	 * Returns the DAE version associated with the Model data
+	 * @return (String) - the DAE version
+	 */
+	public String getDAEVersion() {
+		return this.dae_version;
 	}
 
 	/**

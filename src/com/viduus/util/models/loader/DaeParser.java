@@ -148,7 +148,7 @@ public class DaeParser {
 //			}
 //		}
 		
-		System.exit(0);
+//		System.exit(0);
 	}
 
 	/**
@@ -326,7 +326,7 @@ public class DaeParser {
 	 * @return The processed model from this parser.
 	 */
 	public ModelData getModelData() {
-		ModelData new_model = new ModelData( model_name, version, scene_meshes );
+		ModelData new_model = new ModelData( model_name, version, object_meshes );
 		return new_model;
 	}
 

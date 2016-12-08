@@ -14,17 +14,17 @@ public abstract class DataArray <T> {
 	/**
 	 * Number of numbers representing a point
 	 */
-	final int stride;
+	public final int stride;
 	
 	/**
 	 * Number of points
 	 */
-	final int count;
+	public final int count;
 
 	/**
 	 * Backing array for this data array.
 	 */
-	T[] data;
+	public T[] data;
 
 	/**
 	 * @param count

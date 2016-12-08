@@ -31,9 +31,9 @@ public class Mesh{
 	private final String id, name;
 	
 	private SceneNode object_matrix;
-	private float[] gpu_buffer = null;
-	private final int ELEMENTS_PER_VERTEX = 8;
-	private short[] ibo_buffer = null;
+	public float[] gpu_buffer = null;
+	public final int ELEMENTS_PER_VERTEX = 8;
+	public short[] ibo_buffer = null;
 	
 	/**
 	 * Creates a new mesh off of a mesh xml tag.
@@ -76,6 +76,13 @@ public class Mesh{
 				}
 			}
 		}
+		
+		// Combine the normals and vertices
+		generateGpuBuffer();
+	}
+	
+	public String getName() {
+		return this.name;
 	}
 
 	/**
@@ -95,6 +102,65 @@ public class Mesh{
 			polylist.printData();
 		}
 		OutputHandler.removeTab();
+	}
+	
+	private void generateGpuBuffer(){
+		// Combine the normals and vertices
+		int gpu_index = 0;
+		
+	    int gpu_buffer_count = 0, ibo_buffer_counter = 0;
+	    for(int i = 0; i < polylists.size(); i++) {
+	    	Polylist faces = polylists.get(i);
+	    	gpu_buffer_count += faces.vcount.length*3*ELEMENTS_PER_VERTEX;
+	    	ibo_buffer_counter += faces.vcount.length*3;
+	    }
+	    
+		gpu_buffer = new float[ gpu_buffer_count ];
+		ibo_buffer = new short[ ibo_buffer_counter ];
+		for( short i=0 ; i<ibo_buffer.length ; i++ )
+			ibo_buffer[i] = i;
+		
+		for(int k = 0; k < polylists.size(); k++) {
+			
+			int index = 0;
+		    Polylist faces = polylists.get(k);
+		    FloatArray vertexes = (FloatArray) sources.get(verticies.get(faces.sources.get("VERTEX").substring(1)).sources.get("POSITION").substring(1)).data;
+		    FloatArray normals = (FloatArray) sources.get(faces.sources.get("NORMAL").substring(1)).data;
+		
+			for( byte verts : faces.vcount ){
+				
+				short[] vert_i = new short[verts];
+				short[] norm_i = new short[verts];
+				short[] text_i = new short[verts];
+				for( int i=0 ; i<verts ; i++ ){
+					vert_i[i] = faces.v_indexes[index++];
+					norm_i[i] = faces.v_indexes[index++];
+					text_i[i] = faces.v_indexes[index++];
+				}
+				
+				float[][] points = new float[verts][3];
+				float[][] norms = new float[verts][3];
+					
+				for( int i=0 ; i<verts ; i++ ){
+					for( int j=0 ; j<vertexes.stride ; j++ ){
+						points[i][j] = vertexes.data[vert_i[i]*vertexes.stride+j];
+						norms[i][j] = normals.data[norm_i[i]*normals.stride+j];
+					}
+				}
+				
+				for( int i=0 ; i<verts ; i++ ){
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX ] = points[i][0]; // x
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 1 ] = points[i][1]; // y
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 2 ] = points[i][2]; // z
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 3 ] = norms[i][0]; // nx
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 4 ] = norms[i][1]; // ny
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 5 ] = norms[i][2]; // nz
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 6 ] = 0.0f; // t
+					gpu_buffer[ gpu_index*ELEMENTS_PER_VERTEX + 7 ] = 0.0f; // s
+					gpu_index++;
+				}
+			}
+		}
 	}
 
 //	/**

@@ -19,7 +19,7 @@ import com.viduus.util.models.loader.DaeParseException;
 public class Source {
 
 	private final String id;
-	private final DataArray<?> data;
+	public final DataArray<?> data;
 
 	/**
 	 * @param curr_source
