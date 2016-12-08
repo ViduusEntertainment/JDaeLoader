@@ -118,20 +118,30 @@ public class DaeParser {
 			
 		}
 		
-		for( Effect effect : object_effects.values() )
-			effect.printData();
+		if(object_effects != null) {
+			for( Effect effect : object_effects.values() )
+				effect.printData();
+			}
 		
-		for( Material material : object_materials.values() )
-			material.printData();
+		if(object_materials != null) {
+			for( Material material : object_materials.values() )
+				material.printData();
+		}
 		
-		for( Mesh mesh : object_meshes.values() )
-			mesh.printData();
+		if(object_meshes != null) {
+			for( Mesh mesh : object_meshes.values() )
+				mesh.printData();
+		}
 		
-		for( Animation animation : object_animations.values() )
-			animation.printData();
+		if(object_animations != null) {
+			for( Animation animation : object_animations.values() )
+				animation.printData();
+		}
 		
-		for( Controller controller : object_controllers.values() )
-			controller.printData();
+		if(object_controllers != null) {
+			for( Controller controller : object_controllers.values() )
+				controller.printData();
+		}
 		
 		/*
 		 * Apply transformations and attach everything to each other

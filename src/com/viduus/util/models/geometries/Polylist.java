@@ -8,6 +8,7 @@ import org.w3c.dom.NodeList;
 
 import com.viduus.util.debug.OutputHandler;
 import com.viduus.util.models.loader.DaeParseException;
+import com.viduus.util.models.util.FloatArray;
 
 /**
  * This class loads and holds all of the face data from collada file.
@@ -15,6 +16,8 @@ import com.viduus.util.models.loader.DaeParseException;
  *
  */
 public class Polylist {
+	
+	private final Mesh mesh;
 	
 	/**
 	 * Number of vertices in a face. This should be constant
@@ -30,6 +33,21 @@ public class Polylist {
 	 *  Source id for vertex
 	 */
 	public final HashMap<String, String> sources = new HashMap<>();
+	
+	/**
+	 * This polylist's GPU (Graphics Processing Unit) buffer
+	 */
+	public float[] gpu_buffer = null;
+	
+	/**
+	 * This polylist's IBO (Index Buffer Object) buffer
+	 */
+	public short[] ibo_buffer = null;
+	
+	/**
+	 * The number of elements per vertex.  Will be 0 until "getGPUBuffer" is called
+	 */
+	public int elements_per_vertex = 0;
 
 	/**
 	 * Constructs and loads the Polyface data with a given polylist xml tag Node
@@ -39,9 +57,11 @@ public class Polylist {
 	 * @throws DaeParseException 
 	 * @see Node
 	 */
-	public Polylist(Node source_node) throws DaeParseException {
+	public Polylist(Node source_node, Mesh mesh) throws DaeParseException {
 		if( !source_node.getNodeName().equals("polylist") )
 			throw new DaeParseException("Polylist constructor must be run on a <polylist> tag.");
+		
+		this.mesh = mesh;
 		
 		NodeList source_data = source_node.getChildNodes();
 		NamedNodeMap source_attributes = source_node.getAttributes();
@@ -98,5 +118,75 @@ public class Polylist {
 	public void printData() {
 		OutputHandler.println("Polyface:[count:'"+v_indexes.length+"', vertex_source:'"+sources.get("VERTEX")+"', normal_source:'"+sources.get("NORMAL")+"', texture_source:'"+sources.get("TEXCOORD")+"']");
 	}
+	
+	public short[] getIBOBuffer() {
+		if(ibo_buffer != null)
+			return ibo_buffer;
+		
+		ibo_buffer = new short[ this.vcount.length * 3 ];
+		for( short i = 0 ; i < ibo_buffer.length ; i++ )
+			ibo_buffer[i] = i;
+		
+		return ibo_buffer;
+	}
 
+	public float[] getGPUBuffer(int max_bones_per_vertex, float[] joint_buffer) {
+		if(gpu_buffer != null)
+			return gpu_buffer;
+
+		int gpu_index = 0, index = 0;
+
+	    FloatArray vertexes = this.sources.containsKey("VERTEX") ? (FloatArray) mesh.sources.get(mesh.verticies.get(this.sources.get("VERTEX").substring(1)).sources.get("POSITION").substring(1)).data : null;
+	    FloatArray normals = this.sources.containsKey("NORMAL") ? (FloatArray) mesh.sources.get(this.sources.get("NORMAL").substring(1)).data : null;
+	    FloatArray textures = this.sources.containsKey("TEXCOORD") ? (FloatArray) mesh.sources.get(this.sources.get("TEXCOORD").substring(1)).data : null;
+	
+	    elements_per_vertex = (vertexes != null ? vertexes.stride : 0) + 
+					    	   (normals != null ? normals.stride : 0) + 
+					    	   (textures != null ? textures.stride : 0) + 
+					    	   2 * max_bones_per_vertex;
+	    
+		gpu_buffer = new float[ this.vcount.length * 3 * elements_per_vertex ];
+	    
+		for( byte verts : this.vcount ){
+			
+			short[] vert_i = new short[verts];
+			short[] norm_i = new short[verts];
+			short[] text_i = new short[verts];
+			for( int i = 0 ; i < verts ; i++ ){
+				if(vertexes != null)
+					vert_i[i] = this.v_indexes[index++];
+				if(normals != null)
+					norm_i[i] = this.v_indexes[index++];
+				if(textures != null)
+					text_i[i] = this.v_indexes[index++];
+			}
+			
+			for( int i = 0; i < verts; i++ ){
+				int offset = -1;
+				
+				if(vertexes != null) {
+					for( int j = 0 ; j < vertexes.stride; j++ )
+						gpu_buffer[ gpu_index * elements_per_vertex + (++offset)] = vertexes.data[vert_i[i] * vertexes.stride + j];
+				}
+				
+				if(normals != null) {
+					for( int j = 0 ; j < normals.stride; j++ )
+						gpu_buffer[ gpu_index * elements_per_vertex + (++offset)] = normals.data[norm_i[i] * normals.stride + j];
+				}
+				
+				if(textures != null) {
+					for( int j = 0 ; j < textures.stride; j++ )
+						gpu_buffer[ gpu_index * elements_per_vertex + (++offset)] = textures.data[norm_i[i] * textures.stride + j];
+				}
+				
+				if(joint_buffer != null) {
+					
+				}
+				
+				gpu_index++;
+			}
+		}
+		
+		return gpu_buffer;
+	}
 }
