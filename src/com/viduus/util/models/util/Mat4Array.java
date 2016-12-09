@@ -28,7 +28,7 @@ public class Mat4Array extends DataArray<Mat4> {
 		float[] nums = new float[16];
 		for( int i=0, j=0 ; i<count*stride ; i++ ){
 			nums[i % 16] = Float.parseFloat(numbers[i]);
-			if( i != 0 && i%16 == 0 )
+			if( i != 0 && (i-1)%16 == 0 )
 				data[j++] = new Mat4(nums);
 		}
 	}

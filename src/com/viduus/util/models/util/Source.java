@@ -9,6 +9,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.viduus.util.debug.OutputHandler;
+import com.viduus.util.models.controller.Joint;
+import com.viduus.util.models.controller.VertexWeights;
 import com.viduus.util.models.loader.DaeParseException;
 
 /**
@@ -19,7 +22,7 @@ import com.viduus.util.models.loader.DaeParseException;
 public class Source {
 
 	private final String id;
-	public final DataArray<?> data;
+	public final DataArray<?> array;
 
 	/**
 	 * @param curr_source
@@ -76,12 +79,12 @@ public class Source {
 		// Read in the data into the float array
 		if( elements.containsKey("float_array") ){
 			if( stride == 16 ){ // FIXME replace with actual float4x4 check
-				data = new Mat4Array( elements.get("float_array"), count, stride );
+				array = new Mat4Array( elements.get("float_array"), count, stride );
 			}else{
-				data = new FloatArray( elements.get("float_array"), count, stride );
+				array = new FloatArray( elements.get("float_array"), count, stride );
 			}
 		}else if( elements.containsKey("Name_array") ){
-			data = new NameArray( elements.get("Name_array"), count, stride );
+			array = new NameArray( elements.get("Name_array"), count, stride );
 		}else{
 			throw new DaeParseException("Did not find a supported data array in the source tag.");
 		}
@@ -93,6 +96,13 @@ public class Source {
 	 */
 	public String getId() {
 		return id;
+	}
+	
+	/**
+	 * 
+	 */
+	public void printData() {
+		OutputHandler.println("Source[source_id:'"+id+"', count:"+array.count+", stride:"+array.stride+"]");
 	}
 
 }

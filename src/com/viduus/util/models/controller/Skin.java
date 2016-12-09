@@ -24,11 +24,12 @@ import com.viduus.util.models.util.Source;
  */
 public class Skin {
 
-	private final String source_id;
+	public final String source_id;
 	public final HashMap<String, Source> sources = new HashMap<>();
 	public final HashMap<String, String> joints = new HashMap<>();
-	private final List<VertexWeights> vertex_weights = new ArrayList<>();
-	private Mat4 bind_shape_matrix;
+	public final List<VertexWeights> vertex_weights = new ArrayList<>();
+	public final HashMap<String, Joint> joint_bones = new HashMap<>();
+	public Mat4 bind_shape_matrix;
 	
 	/**
 	 * @param child
@@ -77,6 +78,14 @@ public class Skin {
 				throw new DaeParseException(child_name+" animation tag is not implemented.");
 			}
 		}
+		
+		// Create joint bones
+		Source joint_names = sources.get(joints.get("JOINT"));
+		Source joint_matricies = sources.get(joints.get("INV_BIND_MATRIX"));
+		for( int i=0 ; i<joint_names.array.count ; i++ ){
+			Joint n_joint = new Joint( (String)joint_names.array.data[i], i, (Mat4)joint_matricies.array.data[i] );
+			joint_bones.put(n_joint.name, n_joint);
+		}
 	}
 
 	/**
@@ -87,11 +96,12 @@ public class Skin {
 		OutputHandler.addTab();
 		for( VertexWeights vert_weight : vertex_weights )
 			vert_weight.printData();
-		for( String key : sources.keySet() ){
-			OutputHandler.println("Source:[name:'"+key+"', data:'"+sources.get(key).toString()+"']");
-		}
+		for( Joint joint : joint_bones.values() )
+			joint.printData();
+		for( Source source : sources.values() )
+			source.printData();
 		for( String key : joints.keySet() ){
-			OutputHandler.println("Joint:[name:'"+key+"', data:'"+joints.get(key).toString()+"']");
+			OutputHandler.println("JointAttribute:[name:'"+key+"', data:'"+joints.get(key).toString()+"']");
 		}
 		OutputHandler.println("BindShapeMatrix @ "+bind_shape_matrix);
 		OutputHandler.removeTab();

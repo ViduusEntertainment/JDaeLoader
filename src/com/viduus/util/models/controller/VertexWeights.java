@@ -19,6 +19,7 @@ public class VertexWeights {
 	/**
 	 * Number of vertices in a face. This should be constant
 	 */
+	public final int max_vcount;
 	public final byte[] vcount;
 	
 	/**
@@ -76,10 +77,14 @@ public class VertexWeights {
 		Node vcount_node = elements.get("vcount");
 		String[] nums = vcount_node.getTextContent().split(" ");
 		int vert_count = 0;
+		int max_vcount = 0;
 		for( int i=0 ; i<count ; i++ ){
 			vcount[i] = Byte.parseByte(nums[i]);
+			if( vcount[i] > max_vcount )
+				max_vcount = vcount[i];
 			vert_count += vcount[i];
 		}
+		this.max_vcount = max_vcount;
 		
 		// Load in vertex index array
 		int numb_inputs = sources.size();

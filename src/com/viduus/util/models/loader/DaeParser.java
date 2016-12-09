@@ -143,6 +143,9 @@ public class DaeParser {
 				controller.printData();
 		}
 		
+		generateJointBuffers();
+		generateGpBuffers();
+		
 		/*
 		 * Apply transformations and attach everything to each other
 		 */
@@ -159,6 +162,31 @@ public class DaeParser {
 //		}
 		
 //		System.exit(0);
+	}
+
+	/**
+	 * 
+	 */
+	private void generateJointBuffers() {
+		for( Controller controller : object_controllers.values() )
+			controller.generateJointBuffer();
+	}
+
+	/**
+	 * 
+	 */
+	private void generateGpBuffers() {
+		for( String controller_key : object_controllers.keySet() ){
+			Controller controller = object_controllers.get(controller_key);
+			
+			// calculate max number of bones to each vertex
+			int max_bones = 0;
+			
+		}
+		// for each controller
+			// calculate max number of bones to each vertex
+			// allocate arrays
+			//
 	}
 
 	/**

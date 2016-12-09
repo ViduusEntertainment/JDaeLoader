@@ -136,9 +136,9 @@ public class Polylist {
 
 		int gpu_index = 0, index = 0;
 
-	    FloatArray vertexes = this.sources.containsKey("VERTEX") ? (FloatArray) mesh.sources.get(mesh.verticies.get(this.sources.get("VERTEX").substring(1)).sources.get("POSITION").substring(1)).data : null;
-	    FloatArray normals = this.sources.containsKey("NORMAL") ? (FloatArray) mesh.sources.get(this.sources.get("NORMAL").substring(1)).data : null;
-	    FloatArray textures = this.sources.containsKey("TEXCOORD") ? (FloatArray) mesh.sources.get(this.sources.get("TEXCOORD").substring(1)).data : null;
+	    FloatArray vertexes = this.sources.containsKey("VERTEX") ? (FloatArray) mesh.sources.get(mesh.verticies.get(this.sources.get("VERTEX").substring(1)).sources.get("POSITION").substring(1)).array : null;
+	    FloatArray normals = this.sources.containsKey("NORMAL") ? (FloatArray) mesh.sources.get(this.sources.get("NORMAL").substring(1)).array : null;
+	    FloatArray textures = this.sources.containsKey("TEXCOORD") ? (FloatArray) mesh.sources.get(this.sources.get("TEXCOORD").substring(1)).array : null;
 	
 	    elements_per_vertex = (vertexes != null ? vertexes.stride : 0) + 
 					    	   (normals != null ? normals.stride : 0) + 
