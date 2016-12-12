@@ -1,19 +1,26 @@
 package com.viduus.util.models.loader;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.viduus.util.debug.OutputHandler;
+import com.viduus.util.models.Bone;
 import com.viduus.util.models.ModelData;
-import com.viduus.util.models.SceneNode;
 import com.viduus.util.models.animations.Animation;
 import com.viduus.util.models.controller.Controller;
 import com.viduus.util.models.effects.Effect;
 import com.viduus.util.models.geometries.Mesh;
 import com.viduus.util.models.materials.Material;
+import com.viduus.util.models.visual_scene.Instance;
+import com.viduus.util.models.visual_scene.InstanceController;
+import com.viduus.util.models.visual_scene.InstanceGeometry;
+import com.viduus.util.models.visual_scene.SceneNode;
 
 /**
  * This class implements parsing the collada dae file format. 
@@ -22,15 +29,23 @@ import com.viduus.util.models.materials.Material;
  */
 public class DaeParser {
 	
+	/*
+	 * Variables used that are loaded verbatim form DAE file
+	 */
 	private final String model_name, version;
 	private HashMap<String, Mesh> object_meshes;
-	private HashMap<String, SceneNode> scene_transforms;
-	private HashMap<String, Mesh> scene_meshes;
+	private HashMap<String, SceneNode> object_visual_scenes;
 	private HashMap<String, Effect> object_effects;
 	private HashMap<String, Material> object_materials;
 	private HashMap<String, Animation> object_animations;
 	private HashMap<String, Controller> object_controllers;
 
+	/*
+	 * Variables that are created using the loaded data.
+	 */
+	private HashMap<String, Bone> model_bones;
+	private HashMap<String, Mesh> model_meshes = new HashMap<>();
+	
 	/**
 	 * Creates a new dae parser.
 	 * 
@@ -105,7 +120,7 @@ public class DaeParser {
 			 * Holds all of the default transformation matrices for the model
 			 */
 			}else if( section_name.equals("library_visual_scenes") ){
-				scene_transforms = loadVisualScene( curr_section );
+				object_visual_scenes = loadVisualScene( curr_section );
 				
 			}else if( section_name.equals("scene") ){
 				// TODO Not implemented
@@ -118,6 +133,42 @@ public class DaeParser {
 			
 		}
 		
+//		printLoadingInfo();
+
+		applyEffects();
+		applyVisualScene();
+		
+		printProcessedInfo();
+	}
+
+	/**
+	 * 
+	 */
+	private void applyEffects() {
+		for( Material material : object_materials.values() ){
+			material.setEffect( object_effects.get(material.effect_url) );
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void printProcessedInfo() {
+		if(model_bones != null) {
+			for( Bone bone : model_bones.values() )
+				bone.printData();
+		}
+		
+		if(model_meshes != null) {
+			for( Mesh mesh : model_meshes.values() )
+				mesh.printData();
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void printLoadingInfo() {
 		if(object_effects != null) {
 			for( Effect effect : object_effects.values() )
 				effect.printData();
@@ -143,15 +194,95 @@ public class DaeParser {
 				controller.printData();
 		}
 		
-		generateJointBuffers();
-		generateGpBuffers();
+		if(object_visual_scenes != null){
+			for( SceneNode node : object_visual_scenes.values() )
+				node.printData();
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void applyVisualScene() {
+		// Create and attaches bones, uses DFS
+		for( SceneNode node : object_visual_scenes.values() ){
+			// Check that it has sub nodes
+			if( node.sub_nodes.size() > 0 ){
+				model_bones = new HashMap<>();
+				List<SceneNode> nodes = new LinkedList<>();
+				// Do DFS: to create bones
+				nodes.addAll(node.sub_nodes);
+				while( !nodes.isEmpty() ){
+					SceneNode curr_node = nodes.remove(0);
+					String id = curr_node.getIdentifier();
+					model_bones.put(id, new Bone(curr_node));
+					for( SceneNode sub_node : curr_node.sub_nodes )
+						nodes.add(sub_node);
+				}
+				// Do DFS: to attach bones
+				nodes.addAll(node.sub_nodes);
+				while( !nodes.isEmpty() ){
+					SceneNode curr_node = nodes.remove(0);
+					String id = curr_node.getIdentifier();
+					Bone curr_bone = model_bones.get(id);
+					for( SceneNode sub_node : curr_node.sub_nodes ){
+						String tid = sub_node.getIdentifier();
+						curr_bone.children.add( model_bones.get(tid) );
+						nodes.add(sub_node);
+					}
+				}
+			}
+		}
 		
-		/*
-		 * Apply transformations and attach everything to each other
-		 */
+		// Instantiate everything
+		for( SceneNode node : object_visual_scenes.values() ){
+			// Check that it has instantiated things
+			if( node.instances.size() > 0 ){
+				for( Instance instance : node.instances ){
+					// Instantiate a geometry
+					if( instance instanceof InstanceGeometry ){
+						InstanceGeometry instance_geometry = (InstanceGeometry) instance;
+						Mesh instantiated_mesh = object_meshes.get(instance.reference_url);
+						instantiated_mesh.setJointBuffer();
+						
+						// Attach materials to mesh
+						for( String symbol : instance_geometry.bind_material.instance_materials.keySet() ){
+							String target = instance_geometry.bind_material.instance_materials.get(symbol);
+							instantiated_mesh.addMaterial(symbol, object_materials.get(target));
+						}
+
+						model_meshes.put(instantiated_mesh.id, instantiated_mesh);
+						
+					// Instantiate a controller
+					}else if( instance instanceof InstanceController ){
+						InstanceController instance_controller = (InstanceController) instance;
+						Controller instantiated_controller = object_controllers.get(instance.reference_url);
+						instantiated_controller.generateJointBuffer();
+						
+						// Get target mesh
+						Mesh instantiated_mesh = object_meshes.get(instantiated_controller.skin.source_id);
+						instantiated_mesh.setJointBuffer(instantiated_controller.max_joints_per_vert, instantiated_controller.joint_buffers);
+						
+						// TODO Apply bind pose matrix to mesh
+						
+						// Attach materials to mesh
+						for( String symbol : instance_controller.bind_material.instance_materials.keySet() ){
+							String target = instance_controller.bind_material.instance_materials.get(symbol);
+							instantiated_mesh.addMaterial(symbol, object_materials.get(target));
+						}
+						
+						model_meshes.put(instantiated_mesh.id, instantiated_mesh);
+					}
+				}
+			}
+		}
+		
+		// Apply bone transformations
+		
+		
 //		scene_meshes = new HashMap<>();
-//		for( String transform_key : scene_transforms.keySet() ){
-//			SceneNode scene_tranform = scene_transforms.get(transform_key);
+//		for( String transform_key : object_visual_scenes.keySet() ){
+//			SceneNode scene_tranform = object_visual_scenes.get(transform_key);
 //			// Make sure that it has been loaded
 //			if( object_meshes.containsKey( scene_tranform.reference_url ) ){
 //				Mesh affected_model = object_meshes.get( scene_tranform.reference_url );
@@ -160,33 +291,6 @@ public class DaeParser {
 //				System.out.println("data "+scene_tranform.getName());
 //			}
 //		}
-		
-//		System.exit(0);
-	}
-
-	/**
-	 * 
-	 */
-	private void generateJointBuffers() {
-		for( Controller controller : object_controllers.values() )
-			controller.generateJointBuffer();
-	}
-
-	/**
-	 * 
-	 */
-	private void generateGpBuffers() {
-		for( String controller_key : object_controllers.keySet() ){
-			Controller controller = object_controllers.get(controller_key);
-			
-			// calculate max number of bones to each vertex
-			int max_bones = 0;
-			
-		}
-		// for each controller
-			// calculate max number of bones to each vertex
-			// allocate arrays
-			//
 	}
 
 	/**
@@ -285,8 +389,9 @@ public class DaeParser {
 	 * Processes the 'library_visual_scenes' section of a dae file.
 	 * 
 	 * @param curr_section - (Node) The 'library_visual_scenes' node in the xml file.
+	 * @throws DaeParseException 
 	 */
-	private HashMap<String, SceneNode> loadVisualScene(Node section) {
+	private HashMap<String, SceneNode> loadVisualScene(Node section) throws DaeParseException {
 		HashMap<String, SceneNode> result = new HashMap<>();
 		
 		NodeList scenes = section.getChildNodes();

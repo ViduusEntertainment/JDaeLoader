@@ -79,6 +79,11 @@ public class Skin {
 			}
 		}
 		
+		// Check for unsupported stuff
+		// TODO Support multiple <vertex_weights>
+		if( vertex_weights.size() > 1 )
+			throw new DaeParseException("Multiple <vertex_weights> tags are not supported.");
+		
 		// Create joint bones
 		Source joint_names = sources.get(joints.get("JOINT"));
 		Source joint_matricies = sources.get(joints.get("INV_BIND_MATRIX"));

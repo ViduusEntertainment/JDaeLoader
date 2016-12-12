@@ -20,7 +20,7 @@ import com.viduus.util.models.util.Color;
 public class Effect {
 
 	private final String id;
-	private LightingModel lighting_model;
+	public LightingModel lighting_model;
 
 	/**
 	 * @param curr_effect

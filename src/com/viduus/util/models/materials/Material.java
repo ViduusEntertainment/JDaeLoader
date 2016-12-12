@@ -8,6 +8,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.viduus.util.debug.OutputHandler;
+import com.viduus.util.models.effects.Effect;
 import com.viduus.util.models.loader.DaeParseException;
 
 /**
@@ -18,7 +19,8 @@ import com.viduus.util.models.loader.DaeParseException;
 public class Material {
 
 	private final String id;
-	private String effect_url;
+	public String effect_url;
+	public Effect effect;
 
 	/**
 	 * @param curr_material
@@ -39,7 +41,7 @@ public class Material {
 			
 			if( child_name.equals("instance_effect") ){
 				NamedNodeMap instance_attributes = child_node.getAttributes();
-				effect_url = instance_attributes.getNamedItem("url").getTextContent();
+				effect_url = instance_attributes.getNamedItem("url").getTextContent().substring(1);
 				// TODO Implement tags that can be inside of <instance_effect>
 				
 			}else if( !child_name.equals("#text") ){
@@ -59,7 +61,14 @@ public class Material {
 	 * 
 	 */
 	public void printData() {
-		OutputHandler.println("Material[id:'"+id+"', effect_url:'"+effect_url+"']");
+		OutputHandler.println("Material[id:'"+id+"', effect_url:'"+effect_url+"', effect_obj:"+effect+"]");
+	}
+
+	/**
+	 * @param effect2
+	 */
+	public void setEffect(Effect effect) {
+		this.effect = effect;
 	}
 
 	

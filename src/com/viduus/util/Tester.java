@@ -21,6 +21,7 @@ public class Tester {
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException{
 		DaeLoader loader = new DaeLoader();
 		loader.loadModel("./models/Goofy.dae");
+//		loader.loadModel("./models/BasketballHoop.dae");
 	}
 
 }

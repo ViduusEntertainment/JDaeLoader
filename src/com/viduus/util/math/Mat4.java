@@ -587,17 +587,26 @@ public class Mat4 {
 	 * @param j
 	 * @param k
 	 */
-	public void scale(int tx, int ty, int tz) {
+	public void scale(float sx, float sy, float sz) {
 		Mat4 trans_matrix = new Mat4( Mat4.IDENTITY_MATRIX );
 
 		// setup translate matrix
-		trans_matrix.values[0] = tx;
-		trans_matrix.values[5] = ty;
-		trans_matrix.values[10] = tz;
+		trans_matrix.values[0] = sx;
+		trans_matrix.values[5] = sy;
+		trans_matrix.values[10] = sz;
 		trans_matrix.values[15] = 1;
 		
 		// apply transform
 		multiply( trans_matrix );
+	}
+
+	/**
+	 * Shorthand for {@link #scale(float, float, float)}
+	 * @param scale - (float[]) The array containing the scales.
+	 * <b>Must be exactly 3 elements long.</b>
+	 */
+	public void scale(float[] scale) {
+		scale(scale[0], scale[1], scale[2]);
 	}
 	
 }

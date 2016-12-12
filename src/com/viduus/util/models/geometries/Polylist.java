@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 import com.viduus.util.debug.OutputHandler;
 import com.viduus.util.models.loader.DaeParseException;
 import com.viduus.util.models.util.FloatArray;
+import com.viduus.util.models.util.LoaderFunctions;
 
 /**
  * This class loads and holds all of the face data from collada file.
@@ -49,6 +50,8 @@ public class Polylist {
 	 */
 	public int elements_per_vertex = 0;
 
+	public String material_symbol;
+
 	/**
 	 * Constructs and loads the Polyface data with a given polylist xml tag Node
 	 * 
@@ -67,6 +70,7 @@ public class Polylist {
 		NamedNodeMap source_attributes = source_node.getAttributes();
 		
 		int count = Integer.parseInt(source_attributes.getNamedItem("count").getTextContent());
+		material_symbol = LoaderFunctions.getAttributeFromMap(source_attributes, "material");
 
 		HashMap<String, Node> elements = new HashMap<>();
 		
@@ -116,7 +120,7 @@ public class Polylist {
 	 * <b>ONLY FOR TESTING PURPOSES</b>
 	 */
 	public void printData() {
-		OutputHandler.println("Polyface:[count:'"+v_indexes.length+"', vertex_source:'"+sources.get("VERTEX")+"', normal_source:'"+sources.get("NORMAL")+"', texture_source:'"+sources.get("TEXCOORD")+"']");
+		OutputHandler.println("Polyface:[material_symbol:"+material_symbol+", count:'"+v_indexes.length+"', vertex_source:'"+sources.get("VERTEX")+"', normal_source:'"+sources.get("NORMAL")+"', texture_source:'"+sources.get("TEXCOORD")+"']");
 	}
 	
 	public short[] getIBOBuffer() {
@@ -130,10 +134,14 @@ public class Polylist {
 		return ibo_buffer;
 	}
 
-	public float[] getGPUBuffer(int max_bones_per_vertex, float[] joint_buffer) {
-		if(gpu_buffer != null)
-			return gpu_buffer;
+	public float[] getGPUBuffer() {
+		if(gpu_buffer == null)
+			throw new RuntimeException("Must generate GPU buffer before getting the GPU buffer.");
+		
+		return gpu_buffer;
+	}
 
+	public void generateGpuBuffer(int max_bones_per_vertex, float[] joint_buffer) {
 		int gpu_index = 0, index = 0;
 
 	    FloatArray vertexes = this.sources.containsKey("VERTEX") ? (FloatArray) mesh.sources.get(mesh.verticies.get(this.sources.get("VERTEX").substring(1)).sources.get("POSITION").substring(1)).array : null;
@@ -180,13 +188,12 @@ public class Polylist {
 				}
 				
 				if(joint_buffer != null) {
-					
+					for( int j = 0 ; j < max_bones_per_vertex*2 ; j++ )
+						gpu_buffer[ gpu_index * elements_per_vertex + (++offset)] = joint_buffer[ 2 * max_bones_per_vertex * vert_i[i] + j ];
 				}
 				
 				gpu_index++;
 			}
 		}
-		
-		return gpu_buffer;
 	}
 }

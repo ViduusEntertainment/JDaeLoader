@@ -17,8 +17,8 @@ import com.viduus.util.models.util.Color;
  */
 public class PhongModel extends LightingModel{
 
-	Color emission, ambient, diffuse, specular, reflective, transparent;
-	float shininess, reflectivity, transparency, index_of_refraction;
+	public Color emission, ambient, diffuse, specular, reflective, transparent;
+	public float shininess, reflectivity, transparency, index_of_refraction;
 	
 	/**
 	 * @param type_node

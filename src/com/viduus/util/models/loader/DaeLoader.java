@@ -115,7 +115,7 @@ public class DaeLoader {
 						model_files.put(file_path, new_model);
 						
 						// FIXME - temporary and only used for testing
-						new_model.printData();
+//						new_model.printData();
 						
 						out.endTimedPrintln("Finihsed loading model "+file_path+" into memory");
 						return model_files.get(file_path);
